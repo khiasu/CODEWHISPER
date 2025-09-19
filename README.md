@@ -1,29 +1,6 @@
 # Code Whisper ✨
+**AI-powered code explanation tool** with a beautiful, modern frontend and robust Flask backend. Code Whisper provides personality-based code explanations using CodeLLaMA via Ollama, featuring world-class animations and user experience.
 
-A **premium AI-powered code explanation tool** with a beautiful, modern frontend and robust Flask backend. Code Whisper provides personality-based code explanations using CodeLLaMA via Ollama, featuring world-class animations and user experience.
-
-## 🎉 Features
-
-### ✨ **Premium UI/UX**
-- **🎨 Monochromatic Design**: Sophisticated color palette with perfect contrast
-- **🌓 Dark/Light Theme Toggle**: Smooth transitions with theme persistence
-- **⚡ Premium Animations**: Typing effects, button interactions, smooth transitions
-- **📱 Fully Responsive**: Perfect experience on desktop, tablet, and mobile
-- **🎯 Micro-interactions**: Hover effects, loading animations, state transitions
-
-### 🤖 **AI-Powered Explanations**
-- **🎭 Multiple Personalities**: Friend, Professor, Senior Dev, Babysitter modes
-- **⚡ Smart Fallback System**: Intelligent responses even with memory constraints
-- **🔄 Real-time Analysis**: Instant code explanations with typing effects
-- **🧠 Language Detection**: Automatic detection of programming languages
-- **📊 Code Structure Analysis**: Detailed insights into code patterns
-
-### 🛠️ **Advanced Features**
-- **📋 Copy to Clipboard**: One-click copying with visual feedback
-- **🔊 Text-to-Speech**: Read explanations aloud with controls
-- **🗑️ Clear Code Button**: Quick code clearing with animations
-- **⌨️ Keyboard Shortcuts**: Ctrl+Enter to explain, Escape to stop speech
-- **🎪 Loading States**: Beautiful loading animations and progress indicators
 
 ## Prerequisites
 
@@ -161,13 +138,6 @@ CODE WHISPER/
 │   └── README.md             # This documentation
 ```
 
-## Error Handling
-
-The API provides comprehensive error handling:
-
-- **400 Bad Request**: Invalid input (empty code, invalid mode, etc.)
-- **503 Service Unavailable**: Ollama service not available
-- **500 Internal Server Error**: Unexpected server errors
 
 ## Testing
 
@@ -182,35 +152,3 @@ The test suite checks:
 - Modes endpoint  
 - Explain endpoint with all modes
 - Error handling scenarios
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"AI service is not available"**
-   - Make sure Ollama is running: `ollama serve`
-   - Verify CodeLLaMA is installed: `ollama list`
-
-2. **"Could not connect to Ollama"**
-   - Check if Ollama is running on the correct port (11434)
-   - Verify firewall settings
-
-3. **Slow responses**
-   - CodeLLaMA model is large and may take time on first load
-   - Consider adjusting `MAX_TOKENS` in configuration
-
-### Development
-
-For development, the backend runs in debug mode by default. You can modify the personality prompts in `config.py` to customize the explanation styles.
-
-## Next Steps
-
-This backend is ready for frontend integration. The next phase would be to:
-1. Create the HTML/CSS/JS frontend
-2. Implement the typing effect for AI responses
-3. Add theme toggle and other UI features
-4. Deploy the complete application
-
-## License
-
-This project is part of the Code Whisper application.
