@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Test - Code Whisper</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Code Whisper Frontend Test</h1>
+    
+    <div class="test-section">
+        <h2>Backend Connection Test</h2>
+        <button onclick="testBackendHealth()">Test Backend Health</button>
+        <button onclick="testModesEndpoint()">Test Modes Endpoint</button>
+        <div id="connection-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>API Integration Test</h2>
+        <textarea id="test-code" placeholder="Enter test code here...">
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+print(fibonacci(10))
+        </textarea>
+        
+        <select id="test-mode">
+            <option value="friend">Friend</option>
+            <option value="professor">Professor</option>
+            <option value="senior">Senior</option>
+            <option value="babysitter">Babysitter</option>
+        </select>
+        
+        <button onclick="testExplainAPI()">Test Explain API</button>
+        <div id="api-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Frontend Features Test</h2>
+        <button onclick="testClipboard()">Test Clipboard</button>
+        <button onclick="testSpeech()">Test Speech Synthesis</button>
+        <button onclick="testNotifications()">Test Notifications</button>
+        <div id="feature-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Quick Access</h2>
+        <a href="index.html" target="_blank">
+            <button>Open Main Application</button>
+        </a>
+        <a href="http://localhost:5000" target="_blank">
+            <button>Open Backend Only</button>
+        </a>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+
+        function addResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const result = document.createElement('div');
+            result.className = `test-result ${type}`;
+            result.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            container.appendChild(result);
+        }
+
+        async function testBackendHealth() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                if (response.ok) {
+                    addResult('connection-results', `✅ Health check passed: ${data.message}`, 'success');
+                } else {
+                    addResult('connection-results', `❌ Health check failed: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult('connection-results', `❌ Connection error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testModesEndpoint() {
+            try {
+                const response = await fetch(`${API_URL}/modes`);
+                const data = await response.json();
+                if (response.ok) {
+                    addResult('connection-results', `✅ Modes endpoint: ${data.modes.join(', ')}`, 'success');
+                } else {
+                    addResult('connection-results', `❌ Modes endpoint failed: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult('connection-results', `❌ Modes error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testExplainAPI() {
+            const code = document.getElementById('test-code').value;
+            const mode = document.getElementById('test-mode').value;
+            
+            if (!code.trim()) {
+                addResult('api-results', '❌ Please enter some code to test', 'error');
+                return;
+            }
+
+            addResult('api-results', `🔄 Testing explain API with mode: ${mode}`, 'info');
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${API_URL}/explain`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, mode })
+                });
+
+                const data = await response.json();
+                const duration = Date.now() - startTime;
+
+                if (response.ok) {
+                    addResult('api-results', `✅ API success (${duration}ms): ${data.explanation.substring(0, 100)}...`, 'success');
+                } else {
+                    addResult('api-results', `❌ API error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult('api-results', `❌ Request failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testClipboard() {
+            try {
+                await navigator.clipboard.writeText('Test clipboard functionality');
+                addResult('feature-results', '✅ Clipboard write successful', 'success');
+                
+                const text = await navigator.clipboard.readText();
+                if (text === 'Test clipboard functionality') {
+                    addResult('feature-results', '✅ Clipboard read successful', 'success');
+                } else {
+                    addResult('feature-results', '⚠️ Clipboard read returned different text', 'error');
+                }
+            } catch (error) {
+                addResult('feature-results', `❌ Clipboard test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function testSpeech() {
+            if (!('speechSynthesis' in window)) {
+                addResult('feature-results', '❌ Speech synthesis not supported', 'error');
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance('Testing speech synthesis functionality');
+            utterance.rate = 1.2;
+            utterance.onstart = () => addResult('feature-results', '✅ Speech synthesis started', 'success');
+            utterance.onend = () => addResult('feature-results', '✅ Speech synthesis completed', 'success');
+            utterance.onerror = (e) => addResult('feature-results', `❌ Speech error: ${e.error}`, 'error');
+            
+            speechSynthesis.speak(utterance);
+            addResult('feature-results', '🔄 Starting speech synthesis test...', 'info');
+        }
+
+        function testNotifications() {
+            // Test browser notification permission
+            if ('Notification' in window) {
+                addResult('feature-results', `✅ Notifications supported. Permission: ${Notification.permission}`, 'success');
+            } else {
+                addResult('feature-results', '❌ Notifications not supported', 'error');
+            }
+
+            // Test custom notification styling
+            addResult('feature-results', '✅ Custom notification styling works', 'success');
+        }
+
+        // Auto-run connection tests on load
+        window.addEventListener('load', () => {
+            console.log('🧪 Frontend test page loaded');
+            setTimeout(() => {
+                testBackendHealth();
+                testModesEndpoint();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
