@@ -191,26 +191,38 @@ class CodeWhisper {
     async explainCode() {
         const code = this.codeInput.value.trim();
         const mode = this.modeSelect.value;
-
-        // Validation
+        
         if (!code) {
             this.showNotification('Please enter some code to explain.', 'error');
             return;
         }
-
+        
         if (code.length > this.maxCodeLength) {
             this.showNotification(`Code is too long. Maximum ${this.maxCodeLength} characters allowed.`, 'error');
             return;
         }
-
-        // Show loading state
-        this.showLoadingState();
+        
         this.explainBtn.disabled = true;
-
+        this.showLoadingState();
+        
+        const startTime = Date.now();
+        
         try {
-            const startTime = Date.now();
-            
-            const response = await fetch(`${this.apiUrl}/explain`, {
+            // Prefer streaming for responsiveness on slower hardware
+            await this.explainCodeStream(code, mode, startTime);
+        } catch (error) {
+            console.error('Request failed:', error);
+            this.showErrorState(error.message);
+            this.showNotification(`Failed to explain code: ${error.message}`, 'error');
+        } finally {
+            this.explainBtn.disabled = false;
+        }
+    }
+
+    async explainCodeStream(code, mode, startTime) {
+        return new Promise((resolve, reject) => {
+            // Use fetch with ReadableStream for streaming
+            fetch(`${this.apiUrl}/explain-stream`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -219,26 +231,171 @@ class CodeWhisper {
                     code: code,
                     mode: mode
                 })
-            });
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let fullExplanation = '';
+                let isComplete = false;
+                let streamContext = { mode: null, model: null };
+                
+                const readStream = () => {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            if (!isComplete) {
+                                reject(new Error('Stream ended unexpectedly'));
+                            }
+                            return;
+                        }
+                        
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop(); // Keep incomplete line in buffer
+                        
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const data = JSON.parse(line.slice(6));
+                                    
+                                    switch (data.type) {
+                                        case 'start':
+                                            streamContext.mode = data.mode;
+                                            streamContext.model = data.model;
+                                            this.showStreamingExplanation(data);
+                                            break;
+                                            
+                                        case 'chunk':
+                                            fullExplanation = data.accumulated;
+                                            this.updateStreamingText(data.content, fullExplanation);
+                                            break;
+                                            
+                                        case 'done':
+                                            {
+                                                const duration = Date.now() - startTime;
+                                                this.completeStreaming(data, duration);
+                                                isComplete = true;
+                                                resolve();
+                                                return;
+                                            }
+                                        case 'complete':
+                                            {
+                                                // Backend sent a final 'complete' event without full_text
+                                                const duration = Date.now() - startTime;
+                                                this.completeStreaming({
+                                                    full_text: fullExplanation,
+                                                    mode: streamContext.mode,
+                                                    model: streamContext.model
+                                                }, duration);
+                                                isComplete = true;
+                                                resolve();
+                                                return;
+                                            }
+                                        case 'error':
+                                            reject(new Error(data.message));
+                                            return;
+                                    }
+                                } catch (error) {
+                                    console.warn('Failed to parse streaming data:', line);
+                                }
+                            }
+                        }
+                        
+                        readStream(); // Continue reading
+                    }).catch(reject);
+                };
+                
+                readStream();
+            })
+            .catch(reject);
+        });
+    }
 
-            const data = await response.json();
-            const duration = Date.now() - startTime;
-
-            if (!response.ok) {
-                throw new Error(data.error || `HTTP ${response.status}`);
-            }
-
-            // Show success result
-            this.showExplanation(data, duration);
-            this.showNotification('Code explained successfully!', 'success');
-
-        } catch (error) {
-            console.error('Error explaining code:', error);
-            this.showErrorState(error.message);
-            this.showNotification(`Failed to explain code: ${error.message}`, 'error');
-        } finally {
-            this.explainBtn.disabled = false;
+    async explainCodeRegular(code, mode, startTime) {
+        const response = await fetch(`${this.apiUrl}/explain`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                code: code,
+                mode: mode
+            })
+        });
+        
+        const duration = Date.now() - startTime;
+        
+        if (!response.ok) {
+            // Try parse JSON error, otherwise show status text
+            let message = `HTTP ${response.status}: ${response.statusText}`;
+            try {
+                const errorData = await response.json();
+                if (errorData && errorData.error) message = errorData.error;
+            } catch (_) {}
+            throw new Error(message);
         }
+        
+        const data = await response.json();
+        this.showExplanation(data, duration);
+        const model = data.model ? ` (model: ${data.model})` : '';
+        this.showNotification(`Code explained successfully${model}!`, 'success');
+    }
+
+    showStreamingExplanation(data) {
+        this.hideAllStates();
+        
+        // Update meta information
+        const modeNames = {
+            'friend': '🤝 Friend',
+            'professor': '🎓 Professor', 
+            'senior': '😤 Senior Dev',
+            'babysitter': '🍼 Babysitter'
+        };
+        
+        this.resultsMeta.innerHTML = `
+            <div>Mode: ${modeNames[data.mode] || data.mode}</div>
+            <div>Model: ${data.model} (streaming...)</div>
+        `;
+        
+        // Show explanation content
+        this.explanationContent.style.display = 'block';
+        this.explanationText.innerHTML = '<span class="streaming-cursor">▋</span>';
+        
+        // Update speak button state
+        this.updateSpeakButton();
+    }
+
+    updateStreamingText(chunk, fullText) {
+        // Remove cursor and add new content with cursor at the end
+        this.explanationText.innerHTML = fullText + '<span class="streaming-cursor">▋</span>';
+        
+        // Auto-scroll to bottom
+        this.explanationText.scrollTop = this.explanationText.scrollHeight;
+    }
+
+    completeStreaming(data, duration) {
+        // Remove cursor and show final text
+        this.explanationText.innerHTML = data.full_text;
+        
+        // Update meta with final info
+        const modeNames = {
+            'friend': '🤝 Friend',
+            'professor': '🎓 Professor', 
+            'senior': '😤 Senior Dev',
+            'babysitter': '🍼 Babysitter'
+        };
+        
+        this.resultsMeta.innerHTML = `
+            <div>Mode: ${modeNames[data.mode] || data.mode}</div>
+            <div>Response time: ${(duration / 1000).toFixed(1)}s</div>
+            <div>Model: ${data.model}</div>
+        `;
+        
+        this.showNotification('Real-time explanation completed!', 'success');
     }
 
     showLoadingState() {

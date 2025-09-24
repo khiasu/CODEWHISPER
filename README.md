@@ -1,6 +1,6 @@
-# Code Whisper ✨
+# Code Whisper
 
-A **premium AI-powered code explanation tool** with a beautiful, modern frontend and robust Flask backend. Code Whisper provides personality-based code explanations using CodeLLaMA via Ollama, featuring world-class animations and user experience.
+A premium AI-powered code explanation tool with a modern frontend and robust Flask backend. Code Whisper provides personality-based code explanations using local LLMs via Ollama, with smooth animations and a great user experience.
 
 ## 🎉 Features
 
@@ -31,7 +31,7 @@ A **premium AI-powered code explanation tool** with a beautiful, modern frontend
 2. **Ollama** installed and running
 3. **CodeLLaMA model** pulled in Ollama
 
-### Installing Ollama and CodeLLaMA
+### Installing Ollama and AI Models
 
 ```bash
 # Install Ollama (visit https://ollama.ai for platform-specific instructions)
@@ -39,8 +39,11 @@ A **premium AI-powered code explanation tool** with a beautiful, modern frontend
 # Start Ollama service
 ollama serve
 
-# Pull CodeLLaMA model
-ollama pull codellama
+# Pull a smaller, faster model (recommended on low-RAM machines)
+ollama pull qwen2.5-coder:3b
+
+# Or use the larger 7B model if you have enough RAM/VRAM
+ollama pull qwen2.5-coder:7b
 ```
 
 ## Quick Start
@@ -52,13 +55,16 @@ ollama pull codellama
 
 2. **Configure Environment** (optional)
    ```bash
-   # Copy and modify .env file if needed
-   cp .env .env.local
+   # Edit .env to tune performance
+   # Example for faster responses on limited hardware:
+   MODEL_NAME=qwen2.5-coder:3b
+   MAX_TOKENS=128
    ```
 
 3. **Start the Application**
    ```bash
-   python app.py
+   py -3.13 app.py
+   # or simply: python app.py
    ```
 
 4. **Open in Browser**
@@ -69,10 +75,7 @@ ollama pull codellama
 5. **Test Everything**
    ```bash
    # Test backend API
-   python test_backend.py
-   
-   # Test frontend (open in browser)
-   http://localhost:5000/test_frontend.html
+   py -3.13 tests\test_backend.py
    ```
 
 ## API Endpoints
@@ -123,13 +126,18 @@ PORT=5000
 # Ollama Configuration
 OLLAMA_HOST=localhost
 OLLAMA_PORT=11434
-MODEL_NAME=codellama
+MODEL_NAME=qwen2.5-coder:3b
+KEEP_ALIVE=5m
 
 # AI Model Parameters
 TEMPERATURE=0.7
 TOP_P=0.9
-MAX_TOKENS=1000
-REQUEST_TIMEOUT=30
+MAX_TOKENS=128
+
+# Timeouts and fallback behavior
+REQUEST_TIMEOUT=1200        # Non-stream requests timeout (seconds)
+STREAM_TIMEOUT=1800         # Stream read timeout (seconds)
+FALLBACK_DELAY_SECONDS=600  # Wait before switching to fallback (seconds)
 
 # Validation Limits
 MAX_CODE_LENGTH=10000
@@ -139,26 +147,23 @@ MAX_CODE_LENGTH=10000
 
 ```
 CODE WHISPER/
-├── 🐍 Backend
-│   ├── app.py                 # Main Flask application
-│   ├── config.py             # Configuration management
-│   ├── requirements.txt      # Python dependencies
-│   ├── .env                  # Environment variables
-│   ├── test_backend.py       # Comprehensive test suite
+├── app.py                     # Entry point (Flask), serves frontend from /frontend
+├── requirements.txt           # Python dependencies
+├── .env                       # Environment variables (gitignored)
+├── backend/
+│   ├── __init__.py
+│   ├── config.py              # Configuration management
 │   └── services/
 │       ├── __init__.py
-│       └── ollama_service.py # Ollama integration service
+│       └── ollama_service.py  # Ollama integration service
 │
-├── 🎨 Frontend
-│   ├── index.html            # Main application interface
-│   ├── styles.css            # Premium CSS with animations
-│   ├── script.js             # Interactive JavaScript
-│   └── test_frontend.html    # Frontend testing page
+├── frontend/
+│   ├── index.html             # Main application interface
+│   ├── styles.css             # Premium CSS with animations
+│   └── script.js              # Interactive JavaScript
 │
-├── 🚀 Deployment
-│   ├── start.py              # Startup script with health checks
-│   ├── start.bat             # Windows batch starter
-│   └── README.md             # This documentation
+└── tests/
+    └── test_backend.py        # Backend API tests
 ```
 
 ## Error Handling
@@ -174,7 +179,7 @@ The API provides comprehensive error handling:
 Run the test suite to verify everything works:
 
 ```bash
-python test_backend.py
+py -3.13 test_backend.py
 ```
 
 The test suite checks:
@@ -187,9 +192,9 @@ The test suite checks:
 
 ### Common Issues
 
-1. **"AI service is not available"**
+1. "AI service is not available"
    - Make sure Ollama is running: `ollama serve`
-   - Verify CodeLLaMA is installed: `ollama list`
+   - Verify model is installed: `ollama list`
 
 2. **"Could not connect to Ollama"**
    - Check if Ollama is running on the correct port (11434)
@@ -201,15 +206,16 @@ The test suite checks:
 
 ### Development
 
-For development, the backend runs in debug mode by default. You can modify the personality prompts in `config.py` to customize the explanation styles.
+For development, the backend runs in debug mode by default. You can modify the personality prompts in `backend/config.py` to customize the explanation styles.
 
-## Next Steps
+## 🎯 Tech Fest Demo Features
 
-This backend is ready for frontend integration. The next phase would be to:
-1. Create the HTML/CSS/JS frontend
-2. Implement the typing effect for AI responses
-3. Add theme toggle and other UI features
-4. Deploy the complete application
+This project showcases:
+- **AI Integration**: Local LLM integration with Ollama
+- **Modern Web Development**: Flask backend + Vanilla JS frontend
+- **API Design**: RESTful endpoints with proper error handling
+- **User Experience**: Multiple AI personalities for different explanation styles
+- **Real-time Processing**: Streaming responses for better UX
 
 ## License
 

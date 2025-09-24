@@ -256,7 +256,7 @@ body {
 .main-content {
     flex: 1;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: var(--spacing-3xl);
     align-items: start;
 }
@@ -326,6 +326,7 @@ body {
     background-color: var(--bg-code);
     color: var(--text-code);
     resize: vertical;
+    overflow: auto;
     transition: all var(--transition-fast);
     position: relative;
 }
@@ -415,12 +416,12 @@ body {
 
 .mode-select {
     width: 100%;
-    padding: var(--spacing-xl);
+    padding: var(--spacing-md) var(--spacing-xl);
     border: 1px solid var(--border-primary);
-    border-radius: var(--radius-xl);
-    font-size: 0.9rem;
-    font-weight: 500;
-    background-color: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    font-size: 0.95rem;
+    font-weight: 600;
+    background-color: var(--bg-elevated);
     color: var(--text-primary);
     cursor: pointer;
     transition: all var(--transition-fast);
@@ -442,8 +443,7 @@ body {
 
 .mode-select:hover {
     border-color: var(--border-secondary);
-    background-color: var(--bg-elevated);
-    transform: translateY(-1px);
+    background-color: var(--bg-secondary);
     transition: all var(--transition-normal);
 }
 
@@ -548,6 +548,18 @@ body {
     border: 1px solid var(--border-primary);
     position: relative;
     overflow: hidden;
+}
+
+/* Streaming Cursor Animation */
+.streaming-cursor {
+    color: var(--accent-color);
+    animation: blink 1s infinite;
+    font-weight: bold;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
 }
 
 .results-section::before {
@@ -733,6 +745,8 @@ body {
     word-wrap: break-word;
     border: 1px solid var(--border-primary);
     position: relative;
+    overflow: auto;
+    max-height: 60vh;
 }
 
 .explanation-text::before {
