@@ -1,28 +1,30 @@
 Project Structure
 
+```
 CODEWHISPER-main/
-├──app.py                    # Main application file
-├──requirements.txt          # Required Python packages
-├──.env                      # Configuration settings
-│
-├──backend/
-│├── config.py            # Application configuration
-│└── services/
-│└── ollama_service.py # AI service handling
-│
-├──frontend/
-│├── index.html           # Main webpage
-│├── script.js            # Application logic
-│└── styles.css           # Styling
-│
-├──setup.bat/sh             # Setup scripts
-├──start_optimized.bat/sh   # Startup scripts
-├──optimize_gpu.bat         # GPU optimization
-├──switch_model.bat/sh      # Model switching
-│
-├──monitor.bat/sh           # System monitoring
-├──test_all.py              # Test suite
-└──comprehensive_test.bat   # Full tests
+├── app.py                    # Main application file
+├── requirements.txt          # Required Python packages
+├── .env                      # Configuration settings
+├── backend/
+│   ├── config.py            # Application configuration
+│   └── services/
+│       └── ollama_service.py # AI service handling
+├── frontend/
+│   ├── index.html           # Main webpage
+│   ├── script.js            # Application logic
+│   └── styles.css           # Styling
+├── setup.bat                # Setup script for Windows
+├── setup.sh                 # Setup script for Linux/Mac
+├── start_optimized.bat      # Startup for Windows
+├── start_optimized.sh       # Startup for Linux/Mac
+├── optimize_gpu.bat         # GPU optimization
+├── switch_model.bat         # Model switching for Windows
+├── switch_model.sh          # Model switching for Linux/Mac
+├── monitor.bat              # Monitoring for Windows
+├── monitor.sh               # Monitoring for Linux/Mac
+├── test_all.py              # Test suite
+└── comprehensive_test.bat   # Full tests
+```
 
 Getting Started
 
